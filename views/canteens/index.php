@@ -67,10 +67,12 @@ foreach ($canteen_price_keys as $key) {
     echo '<h1>'._('Übersicht').' - '.date('l, j.F', strtotime($date)).'</h1>';
     foreach ($canteens as $canteen) {
         $today_closed=false;
-        foreach ($canteen['meals'][$date] as $meals) {
-            if (strpos($meals->name, 'geschlossen') !== false) {
-                $today_closed=true;
-                break;
+        if (!empty($canteen['meals'][$date])) {
+            foreach ($canteen['meals'][$date] as $meals) {
+                if (strpos($meals->name, 'geschlossen') !== false) {
+                    $today_closed=true;
+                    break;
+                }
             }
         }
         if (!empty($canteen['meals'][$date]) && !$today_closed) {
