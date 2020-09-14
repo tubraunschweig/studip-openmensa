@@ -1,0 +1,5 @@
+pluginname=OpenMensa
+pluginclassname=OpenMensa
+origin=tu-braunschweig
+version=0.0.1
+studipMinVersion=4.0
