@@ -16,23 +16,17 @@
 
 class OpenMensa extends StudIPPlugin implements SystemPlugin
 {
+
+    private $assetsUrl;
+
     public function __construct()
     {
         parent::__construct();
         require_once $this->getPluginPath().'/models/OMModel.php';
+        $this->assetsUrl = rtrim($this->getPluginURL(), '/').'/assets';
 
         if (Navigation::hasItem('/admin/config') && $GLOBALS['perm']->have_perm('root')) {
             Navigation::addItem('/admin/config/openmensa', new Navigation('OpenMensa', PluginEngine::getURL($this, [], 'admin')));
-
-            PageLayout::addScript($this->getpluginUrl() . '/assets/vendor/chosen/chosen.jquery.min.js');
-            PageLayout::addStylesheet($this->getpluginUrl() . '/assets/vendor/chosen/chosen.min.css');
-
-            PageLayout::addScript($this->getpluginUrl() . '/assets/vendor/leaflet/leaflet.js');
-            PageLayout::addStylesheet($this->getpluginUrl() . '/assets/vendor/leaflet/leaflet.css');
-
-            PageLayout::addScript($this->getpluginUrl() . '/assets/vendor/Leaflet.markercluster/dist/leaflet.markercluster.js');
-            PageLayout::addStylesheet($this->getpluginUrl() . '/assets/vendor/Leaflet.markercluster/dist/MarkerCluster.css');
-            PageLayout::addStylesheet($this->getpluginUrl() . '/assets/vendor/Leaflet.markercluster/dist/MarkerCluster.Default.css');
         }
 
         $OMModel = new OMModel;
@@ -42,5 +36,10 @@ class OpenMensa extends StudIPPlugin implements SystemPlugin
             $navigation->setImage(Icon::create('mensa', Icon::ROLE_NAVIGATION));
             Navigation::addItem('/canteens', $navigation);
         }
+    }
+
+    public function getAssetsUrl()
+    {
+        return $this->assetsUrl;
     }
 }

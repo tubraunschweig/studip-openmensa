@@ -4,6 +4,13 @@ require_once $this->trails_root.'/models/OMModel.php';
 
 class CanteensController extends StudipController
 {
+
+    public function __construct($dispatcher)
+    {
+        parent::__construct($dispatcher);
+        $this->plugin = $dispatcher->current_plugin;
+    }
+
     public function before_filter(&$action, &$args)
     {
         // set default layout
@@ -18,6 +25,8 @@ class CanteensController extends StudipController
     {
         PageLayout::setTitle(_("Mensa"));
         Navigation::activateItem('/canteens');
+        PageLayout::addStylesheet($this->plugin->getAssetsUrl() . '/css/openmensa.css');
+
         $OMModel = new OMModel;
         $this->canteens=$OMModel->getCanteens(true);
         $this->default_canteen=$OMModel->getDefaultCanteen();
@@ -30,6 +39,7 @@ class CanteensController extends StudipController
         $this->no_data=false;
         $this->today_closed_text='';
         $nav_head = Navigation::getItem("/canteens");
+        $nav_items=[];
 
         if ($this->canteens) {
             if ($this->overview) {
@@ -38,15 +48,17 @@ class CanteensController extends StudipController
                 $nav_head->addSubNavigation('overview', $nav_sub);
             }
             foreach ($this->canteens as $canteen) {
-                $nav_sub = new navigation($canteen['info']->name, PluginEngine::getURL("openmensa/canteens"), ['id'=>$canteen['info']->id]);
-                Navigation::addItem('/canteens/'.$canteen['info']->id, $nav_sub);
-                $nav_head->addSubNavigation($canteen['info']->id, $nav_sub);
-                if (!empty($canteen['days'])) {
+                if (isset($canteen['info']) && !empty($canteen['info']) && !empty($canteen['days'])) {
+                    $nav_sub = new navigation($canteen['info']->name, PluginEngine::getURL("openmensa/canteens"), ['id'=>$canteen['info']->id]);
+                    Navigation::addItem('/canteens/'.$canteen['info']->id, $nav_sub);
+                    $nav_head->addSubNavigation($canteen['info']->id, $nav_sub);
+                    $nav_items[]='/canteens/'.$canteen['info']->id;
                     foreach ($canteen['days'] as $day) {
                         if (!$day->closed) {
                             $nav_sub_day = new Navigation(date('l, j.F', strtotime($day->date)), PluginEngine::getURL("openmensa/canteens"), ['id'=>$canteen['info']->id,'date'=>$day->date]);
                             $nav_sub_item = Navigation::getItem('/canteens/'.$canteen['info']->id);
                             $nav_sub_item->addSubNavigation($day->date, $nav_sub_day);
+                            $nav_items[]='/canteens/'.$canteen['info']->id.'/'.$day->date;
                         }
                     }
                 }
@@ -65,9 +77,9 @@ class CanteensController extends StudipController
             $this->no_data=true;
         }
 
-        if ($this->id && $this->date) {
+        if ($this->id && $this->date && in_array('/canteens/'.$this->id.'/'.$this->date, $nav_items)) {
             Navigation::activateItem('/canteens/'.$this->id.'/'.$this->date);
-        } elseif ($this->id) {
+        } elseif ($this->id && in_array('/canteens/'.$this->id, $nav_items)) {
             $today=date('Y-m-d', strtotime('today midnight'));
             if (array_key_exists($today, $this->canteens[$this->id]['meals'])) {
                 $this->date=$today;
@@ -80,6 +92,8 @@ class CanteensController extends StudipController
                 Navigation::activateItem('/canteens/'.$this->id);
                 $this->no_data=true;
             }
+        } elseif(!$this->select_overview) {
+            $this->no_data=true;
         }
         if ($this->id && $this->date && count($this->canteens[$this->id]['meals'][$this->date]) == 1) {
             foreach ($this->canteens[$this->id]['meals'][$this->date] as $meals) {

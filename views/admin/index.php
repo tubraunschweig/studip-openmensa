@@ -11,7 +11,7 @@ $sidebar = Sidebar::get();
 <table>
   <tr>
     <td style="vertical-align: top;">
-      <form class="conf-form" action="<?= PluginEngine::getLink('openmensa/admin/update') ?>" method=post>
+      <form class="default conf-form" action="<?= PluginEngine::getLink('openmensa/admin/update') ?>" method=post>
           <?= CSRFProtection::tokenTag() ?>
           <fieldset class="conf-form-field">
               <legend><?=_("OpenMensa Einstellungen")?></legend>
@@ -54,7 +54,7 @@ foreach ($canteens as $canteen) {
               <input type="checkbox" id="overview" name="overview"<?php echo($overview ? ' checked' : '') ?>>
 <?php } ?>
               <div>
-               <?= Button::createAccept(utf8_encode(_('Übernehmen'))) ?>
+               <?= Button::createAccept(_('Übernehmen')) ?>
                <?= LinkButton::createCancel(_('Abbrechen'), PluginEngine::getLink('openmensa/admin/index')) ?>
               </div>
 

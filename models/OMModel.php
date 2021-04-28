@@ -9,7 +9,7 @@ class OMModel
 
         if (empty($return)) {
             $return = $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens');
-            $cache->write('OpenMensa/Canteens', serialize($return));
+            $cache->write('OpenMensa/Canteens', serialize($return),3600);
         }
         return $return;
     }
@@ -18,7 +18,7 @@ class OMModel
     {
         $cache = StudipCacheFactory::getCache();
         $return = $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens');
-        $cache->write('OpenMensa/Canteens', serialize($return));
+        $cache->write('OpenMensa/Canteens', serialize($return),3600);
     }
 
     public function expireCache()
@@ -31,25 +31,47 @@ class OMModel
         $cache->expire('OpenMensa/Canteens');
     }
 
+    public function forceUpdateCanteens()
+    {
+        $this->updatePublicCanteens();
+        $cache = StudipCacheFactory::getCache();
+        $canteens=unserialize(Config::get()->getValue('OM_canteens'))['canteens'];
+        if (!empty($canteens)) {
+            foreach ($canteens as $canteen) {
+                $canteen_cache=[];
+                $meals=[];
+                $canteen_cache['info']= $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen);
+                $canteen_cache['days']= $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen.'/days');
+                if (!empty($canteen_cache['days'])) {
+                    foreach ($canteen_cache['days'] as $day) {
+                        $meals[$day->date]=$this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen.'/days/'.$day->date.'/meals');
+                    }
+                }
+                $canteen_cache['meals']=$meals;
+                $cache->write('OpenMensa/Canteens/'.$canteen, serialize($canteen_cache),3600);
+            }
+        }
+    }
+
     public function getCanteens($meals=true)
     {
         $cache = StudipCacheFactory::getCache();
         $canteens=unserialize(Config::get()->getValue('OM_canteens'))['canteens'];
         if (!empty($canteens) && $meals) {
-            $canteens_cache=array();
+            $canteens_cache=[];
             foreach ($canteens as $canteen) {
                 $canteen_cache=unserialize($cache->read('OpenMensa/Canteens/'.$canteen));
                 if (empty($canteen_cache)) {
                     $canteen_cache['info']= $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen);
                     $canteen_cache['days']= $this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen.'/days');
-                    $meals=array();
+                    $meals=[];
                     if (!empty($canteen_cache['days'])) {
                         foreach ($canteen_cache['days'] as $day) {
                             $meals[$day->date]=$this->requestOpenMensaAPI('https://openmensa.org/api/v2/canteens/'.$canteen.'/days/'.$day->date.'/meals');
                         }
                     }
                     $canteen_cache['meals']=$meals;
-                    $cache->write('OpenMensa/Canteens/'.$canteen, serialize($canteen_cache));
+                    $cache->write('OpenMensa/Canteens/'.$canteen, serialize($canteen_cache),3600);
                 }
                 $canteens_cache[$canteen]=$canteen_cache;
             }
@@ -86,16 +108,16 @@ class OMModel
             $ch,
             CURLOPT_HEADERFUNCTION,
             function ($curl, $header) use (&$headers) {
-            $len = strlen($header);
-            $header = explode(':', $header, 2);
-            if (count($header) < 2) {
+                $len = strlen($header);
+                $header = explode(':', $header, 2);
+                if (count($header) < 2) {
+                    return $len;
+                }
+
+                $headers[strtolower(trim($header[0]))][] = trim($header[1]);
+
                 return $len;
             }
-
-            $headers[strtolower(trim($header[0]))][] = trim($header[1]);
-
-            return $len;
-        }
         );
 
         $data=json_decode(curl_exec($ch));
@@ -117,11 +139,11 @@ class OMModel
             $link_values = array($link_values);
         }
 
-        $links = array();
+        $links = [];
 
         foreach ($link_values as $link_value) {
             $state = 'link_start';
-            $link = array();
+            $link = [];
             $uri = $param_name = $param_value = '';
 
             $link_value = trim($link_value);
@@ -134,7 +156,7 @@ class OMModel
               if ('<' == $chr) {
                   $state = 'uri_start';
                   $uri = '';
-                  $link = array();
+                  $link = [];
               }
               break;
             case 'uri_start':

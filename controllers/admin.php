@@ -4,6 +4,12 @@ require_once $this->trails_root.'/models/OMModel.php';
 
 class AdminController extends StudipController
 {
+    public function __construct($dispatcher)
+    {
+        parent::__construct($dispatcher);
+        $this->plugin = $dispatcher->current_plugin;
+    }
+
     public function before_filter(&$action, &$args)
     {
         // Permission check
@@ -23,12 +29,23 @@ class AdminController extends StudipController
     {
         PageLayout::setTitle(_("OpenMensa Administration"));
         Navigation::activateItem('/admin/config/openmensa');
+
+        PageLayout::addScript($this->plugin->getAssetsUrl() . '/vendor/chosen/chosen.jquery.min.js');
+        PageLayout::addStylesheet($this->plugin->getAssetsUrl() . '/vendor/chosen/chosen.min.css');
+
+        PageLayout::addScript($this->plugin->getAssetsUrl() . '/vendor/leaflet/leaflet.js');
+        PageLayout::addStylesheet($this->plugin->getAssetsUrl() . '/vendor/leaflet/leaflet.css');
+
+        PageLayout::addScript($this->plugin->getAssetsUrl() . '/vendor/Leaflet.markercluster/dist/leaflet.markercluster.js');
+        PageLayout::addStylesheet($this->plugin->getAssetsUrl() . '/vendor/Leaflet.markercluster/dist/MarkerCluster.css');
+        PageLayout::addStylesheet($this->plugin->getAssetsUrl() . '/vendor/Leaflet.markercluster/dist/MarkerCluster.Default.css');
+
         $OMModel = new OMModel;
         $this->public_canteens=$OMModel->getPublicCanteens();
         $canteens=$OMModel->getCanteens(false);
         $this->overview=$OMModel->getOverview();
         $this->default_canteen=$OMModel->getDefaultCanteen();
-        $this->canteens=($canteens ? $canteens : array());
+        $this->canteens=($canteens ? $canteens : []);
     }
 
     public function update_action()
@@ -57,7 +74,7 @@ class AdminController extends StudipController
             $OMModel->setCanteens(['canteens'=>$this->canteens,'default_canteen'=>$this->default_canteen,'overview'=>$this->overview]);
         } else {
             $this->overview=$OMModel->getOverview();
-            $OMModel->setCanteens(['canteens'=>array(),'default_canteen'=>false,'overview'=>$this->overview]);
+            $OMModel->setCanteens(['canteens'=>[],'default_canteen'=>false,'overview'=>$this->overview]);
         }
         $this->redirect(PluginEngine::getLink('openmensa/admin/index'));
     }
@@ -73,7 +90,7 @@ class AdminController extends StudipController
     {
         $OMModel = new OMModel;
         $OMModel->expireCache();
-        $OMModel->setCanteens(array());
+        $OMModel->setCanteens([]);
         $this->redirect(PluginEngine::getLink('openmensa/admin/index'));
     }
 }
