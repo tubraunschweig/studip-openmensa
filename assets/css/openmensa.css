@@ -8,8 +8,7 @@ div.meal-item-header {
   padding: 5px;
   text-indent: 0;
   flex-wrap: wrap;
-  display: flex;
-  white-space: nowrap
+  display: flex
 }
 
 div.meal-additives {
