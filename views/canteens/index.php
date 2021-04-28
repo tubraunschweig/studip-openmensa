@@ -44,9 +44,9 @@ foreach ($canteens as $canteen) {
             <div class="right"><?= $meal->category ?></div>
           </div>
         </legend>
-<?php foreach ($meal->prices as $key => $item) { ?>
+<?php foreach ($meal->prices as $key => $item) { if ($item){ ?>
           <div class="meal-price"><span><?= $key ?></span><span style="float:right"><?= str_replace('EUR', chr(0xE2) . chr(0x82) . chr(0xAC), money_format('%.2n', $item)) ?></span></div>
-<?php } ?>
+<?php }} ?>
           <div class="meal-additives"><?= $notes ?></div>
       </fieldset>
     </div>
@@ -81,9 +81,9 @@ foreach ($canteens as $canteen) {
             <div class="right"><?= $meal->category ?></div>
           </div>
         </legend>
-<?php foreach ($meal->prices as $key => $item) { ?>
+<?php foreach ($meal->prices as $key => $item) { if ($item){ ?>
           <div class="meal-price"><span><?= $key ?></span><span style="float:right"><?= str_replace('EUR', chr(0xE2) . chr(0x82) . chr(0xAC), money_format('%.2n', $item)) ?></span></div>
-<?php } ?>
+<?php }} ?>
           <div class="meal-additives"><?= $notes ?></div>
       </fieldset>
     </div>
